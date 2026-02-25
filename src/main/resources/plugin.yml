@@ -1,0 +1,19 @@
+name: VisibilityPlugin
+version: ${project.version}
+main: visibility.VisibilityPlugin
+api-version: '1.21'
+author: levyxx
+description: Toggle visibility and collision of other players using items and commands.
+commands:
+  show:
+    description: Show other players.
+    usage: /show
+  hide:
+    description: Hide other players.
+    usage: /hide
+  visibility:
+    description: Manage player visibility settings.
+    usage: |-
+      /visibility items
+      /visibility distance <n>
+      /visibility help
