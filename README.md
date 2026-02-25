@@ -30,7 +30,7 @@ Spigot / Paper 対応の Minecraft サーバープラグイン。
 | `/hide` | 周囲のプレイヤーを非表示 |
 | `/visibility items` | 表示切替アイテムを取得 |
 | `/visibility distance <n>` | 距離フィルタを設定 (0 で解除) |
-| `/visibility language <jp\|en>` | 表示言語を変更 |
+| `/visibility language <ja\|en>` | 表示言語を変更 |
 | `/visibility help` | ヘルプを表示 |
 
 ## インストール

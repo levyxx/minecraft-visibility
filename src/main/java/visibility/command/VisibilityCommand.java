@@ -151,8 +151,8 @@ public class VisibilityCommand implements TabExecutor {
 
     private void handleLanguage(Player player, UUID playerId, String langArg) {
         String lower = langArg.toLowerCase(Locale.ROOT);
-        if ("jp".equals(lower) || "ja".equals(lower)) {
-            Messages.setLangManual(playerId, Lang.JP);
+        if ("ja".equals(lower)) {
+            Messages.setLangManual(playerId, Lang.JA);
         } else if ("en".equals(lower)) {
             Messages.setLangManual(playerId, Lang.EN);
         } else {
@@ -205,7 +205,7 @@ public class VisibilityCommand implements TabExecutor {
         if (args.length == 2) {
             String sub = args[0].toLowerCase(Locale.ROOT);
             if ("language".equals(sub) || "lang".equals(sub)) {
-                return List.of("jp", "en").stream()
+                return List.of("ja", "en").stream()
                     .filter(opt -> opt.startsWith(args[1].toLowerCase(Locale.ROOT)))
                     .collect(Collectors.toList());
             }

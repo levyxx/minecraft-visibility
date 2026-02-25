@@ -6,12 +6,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Centralized localization system. Holds all user-facing strings in
- * Japanese (jp) and English (en). Each player's language preference is
+ * Japanese (ja) and English (en). Each player's language preference is
  * stored in memory and defaults based on their Minecraft client locale.
  */
 public final class Messages {
 
-    public enum Lang { JP, EN }
+    public enum Lang { JA, EN }
 
     private static final Map<UUID, Lang> playerLangs = new ConcurrentHashMap<>();
 
@@ -42,7 +42,7 @@ public final class Messages {
         playerLangs.put(playerId, lang);
     }
 
-    public static Lang getLang(UUID playerId) { return playerLangs.getOrDefault(playerId, Lang.JP); }
+    public static Lang getLang(UUID playerId) { return playerLangs.getOrDefault(playerId, Lang.JA); }
 
     public static void removeLang(UUID playerId) {
         playerLangs.remove(playerId);
@@ -56,16 +56,16 @@ public final class Messages {
 
     /** Determine default language from Minecraft client locale string. */
     public static Lang detectLang(String locale) {
-        if (locale != null && locale.toLowerCase().startsWith("ja")) return Lang.JP;
+        if (locale != null && locale.toLowerCase().startsWith("ja")) return Lang.JA;
         return Lang.EN;
     }
 
     // -----------------------------------------------------------------------
-    // Helper: pick JP/EN string
+    // Helper: pick JA/EN string
     // -----------------------------------------------------------------------
 
-    public static String get(UUID playerId, String jp, String en) {
-        return getLang(playerId) == Lang.JP ? jp : en;
+    public static String get(UUID playerId, String ja, String en) {
+        return getLang(playerId) == Lang.JA ? ja : en;
     }
 
     // -----------------------------------------------------------------------
@@ -84,8 +84,8 @@ public final class Messages {
 
     public static String cmdUsageLanguage(UUID id, String l) {
         return get(id,
-            "使い方: /" + l + " language <jp|en>",
-            "Usage: /" + l + " language <jp|en>");
+            "使い方: /" + l + " language <ja|en>",
+            "Usage: /" + l + " language <ja|en>");
     }
 
     public static String cmdLangChanged(UUID id) {
@@ -217,8 +217,8 @@ public final class Messages {
 
     public static String helpLanguage(UUID id, String l) {
         return get(id,
-            HC + "/" + l + " language <jp|en>" + HD + "  言語を変更します",
-            HC + "/" + l + " language <jp|en>" + HD + "  Change language");
+            HC + "/" + l + " language <ja|en>" + HD + "  言語を変更します",
+            HC + "/" + l + " language <ja|en>" + HD + "  Change language");
     }
 
     public static String helpHelp(UUID id, String l) {
