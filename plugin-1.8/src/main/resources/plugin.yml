@@ -1,0 +1,18 @@
+name: VisibilityPlugin
+version: ${project.version}
+main: visibility.VisibilityPlugin
+author: levyxx
+description: Toggle visibility of other players using items and commands.
+commands:
+  show:
+    description: Show other players.
+    usage: /show
+  hide:
+    description: Hide other players.
+    usage: /hide
+  visibility:
+    description: Manage player visibility settings.
+    usage: |-
+      /visibility items
+      /visibility distance <n>
+      /visibility help
