@@ -1,67 +1,86 @@
 package visibility.i18n;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 /**
  * Centralized localization system. Holds all user-facing strings in
  * Japanese (ja) and English (en). Each player's language preference is
  * stored in memory and defaults based on their Minecraft client locale.
+ * Manual language choices (set via command) are persisted to languages.yml.
  */
 public final class Messages {
 
     public enum Lang { JA, EN }
 
-    private static final Map<UUID, Lang> playerLangs = new ConcurrentHashMap<>();
+    private static final Map<UUID, Lang> playerLangs = new ConcurrentHashMap<UUID, Lang>();
 
     /** Players who have explicitly chosen their language via command. */
-    private static final java.util.Set<UUID> manualLangSet = ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> manualLangSet = ConcurrentHashMap.newKeySet();
+
+    /** Plugin data folder for persistence (set via {@link #init}). */
+    private static volatile File dataFolder;
 
     private Messages() {}
+
+    // -----------------------------------------------------------------------
+    // Initialization
+    // -----------------------------------------------------------------------
+
+    /**
+     * Initialize with the plugin data folder and load persisted manual languages.
+     */
+    public static void init(File folder) {
+        dataFolder = folder;
+        loadManualLangs();
+    }
 
     // -----------------------------------------------------------------------
     // Player language management
     // -----------------------------------------------------------------------
 
-    /**
-     * Set language from auto-detection (locale on join / items command).
-     * Ignored if the player has already set their language manually.
-     */
     public static void setLang(UUID playerId, Lang lang) {
         if (!manualLangSet.contains(playerId)) {
             playerLangs.put(playerId, lang);
         }
     }
 
-    /**
-     * Set language explicitly by player command. Persists until logout.
-     */
     public static void setLangManual(UUID playerId, Lang lang) {
         manualLangSet.add(playerId);
         playerLangs.put(playerId, lang);
+        saveManualLangs();
     }
 
-    public static Lang getLang(UUID playerId) { return playerLangs.getOrDefault(playerId, Lang.JA); }
+    public static Lang getLang(UUID playerId) {
+        Lang lang = playerLangs.get(playerId);
+        return lang != null ? lang : Lang.JA;
+    }
 
     public static void removeLang(UUID playerId) {
-        playerLangs.remove(playerId);
-        manualLangSet.remove(playerId);
+        if (!manualLangSet.contains(playerId)) {
+            playerLangs.remove(playerId);
+        }
+        // Keep manually-set language preferences across sessions
     }
 
     public static void clearAll() {
         playerLangs.clear();
         manualLangSet.clear();
+        dataFolder = null;
     }
 
-    /** Determine default language from Minecraft client locale string. */
     public static Lang detectLang(String locale) {
         if (locale != null && locale.toLowerCase().startsWith("ja")) return Lang.JA;
         return Lang.EN;
     }
 
     // -----------------------------------------------------------------------
-    // Helper: pick JA/EN string
+    // Helper
     // -----------------------------------------------------------------------
 
     public static String get(UUID playerId, String ja, String en) {
@@ -140,9 +159,11 @@ public final class Messages {
             "Usage: /" + l + " distance <blocks>  (0 to clear)");
     }
 
-    // -----------------------------------------------------------------------
-    // Collision messages
-    // -----------------------------------------------------------------------
+    public static String distanceNotSupported(UUID id) {
+        return get(id,
+            "距離フィルタはこのバージョンでは使用できません。",
+            "Distance filter is not available on this server version.");
+    }
 
     // -----------------------------------------------------------------------
     // Cooldown messages
@@ -184,8 +205,8 @@ public final class Messages {
     // Help messages
     // -----------------------------------------------------------------------
 
-    private static final String HC = "\u00A7e";   // command color (YELLOW)
-    private static final String HD = "\u00A77";   // description color (GRAY)
+    private static final String HC = "\u00A7e";
+    private static final String HD = "\u00A77";
 
     public static String helpTitle(UUID id) {
         return get(id, "コマンド一覧", "Command List");
@@ -225,5 +246,51 @@ public final class Messages {
         return get(id,
             HC + "/" + l + " help" + HD + "  このヘルプを表示します",
             HC + "/" + l + " help" + HD + "  Show this help");
+    }
+
+    // -----------------------------------------------------------------------
+    // Language persistence
+    // -----------------------------------------------------------------------
+
+    /**
+     * Save manually-set language preferences to languages.yml.
+     */
+    public static void saveManualLangs() {
+        if (dataFolder == null) return;
+        if (!dataFolder.exists()) {
+            dataFolder.mkdirs();
+        }
+
+        File file = new File(dataFolder, "languages.yml");
+        YamlConfiguration config = new YamlConfiguration();
+        for (UUID uuid : manualLangSet) {
+            Lang lang = playerLangs.get(uuid);
+            if (lang != null) {
+                config.set(uuid.toString(), lang == Lang.JA ? "ja" : "en");
+            }
+        }
+
+        try {
+            config.save(file);
+        } catch (IOException ignored) {
+        }
+    }
+
+    private static void loadManualLangs() {
+        if (dataFolder == null) return;
+        File file = new File(dataFolder, "languages.yml");
+        if (!file.exists()) return;
+
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        for (String key : config.getKeys(false)) {
+            try {
+                UUID uuid = UUID.fromString(key);
+                String langStr = config.getString(key, "ja");
+                Lang lang = "en".equalsIgnoreCase(langStr) ? Lang.EN : Lang.JA;
+                manualLangSet.add(uuid);
+                playerLangs.put(uuid, lang);
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
     }
 }
